@@ -23,6 +23,10 @@ timeout_seconds = 600
 [evaluator]
 # Must print a JSON object to stdout. Example:
 # {"score": 83.2, "summary": "42 tests passed, 0 failed", "metrics": {...}}
+# Runtime metric selection examples:
+# command = "python3 tools/evaluate_pytest.py --use-metrics test_pass_rate,coverage"
+# or keep this command and run with env:
+# AUTODEV_METRICS=test_pass_rate,coverage python3 autodev.py --config autodev.toml
 command = "python3 tools/evaluate_pytest.py"
 timeout_seconds = 300
 score_key = "score"

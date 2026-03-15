@@ -49,6 +49,69 @@ python3 autodev.py --config autodev.toml
 - `score` 會被用來決定 keep/discard。
 - `higher_is_better = true` 代表分數越高越好；反之越低越好。
 
+## 預設固定指標（tools/evaluate_pytest.py）
+
+目前範例 evaluator 固定輸出 4 個指標：
+
+- `Test Pass Rate`：測試通過率（%）
+- `Coverage`：程式覆蓋率（%）
+- `Lint Errors`：lint 錯誤數
+- `Type Errors`：型別檢查錯誤數
+
+預設計分公式：
+
+```text
+score = Test Pass Rate * 0.5 + Coverage * 0.3 - Lint Errors * 2 - Type Errors * 2
+```
+
+範例 evaluator 會嘗試執行：
+
+- `python3 -m pytest -q`
+- `python3 -m pytest --cov=. --cov-report=term -q`
+- `python3 -m ruff check .`
+- `python3 -m mypy .`
+
+如果某工具執行失敗，會在 `summary` 的 `notes` 記錄原因，並使用保守 fallback 值。
+
+### 執行時選擇要用的指標
+
+可在執行時決定只用其中 1 個或 2 個指標計分。
+
+直接執行 evaluator：
+
+```bash
+python3 tools/evaluate_pytest.py --use-metrics test_pass_rate
+python3 tools/evaluate_pytest.py --use-metrics test_pass_rate,coverage
+python3 tools/evaluate_pytest.py --use-metrics lint_errors,type_errors
+```
+
+跑 autodev 時（不改 `autodev.toml`）：
+
+```bash
+AUTODEV_METRICS=test_pass_rate,coverage python3 autodev.py --config autodev.toml
+```
+
+可用鍵值：
+
+- `test_pass_rate`
+- `coverage`
+- `lint_errors`
+- `type_errors`
+
+## 如何新增指標
+
+1. 在 `tools/evaluate_pytest.py` 新增指標計算邏輯。
+2. 在輸出 JSON 的 `metrics` 與 `fixed_metrics` 加入新欄位。
+3. 把新指標納入 `score` 計算公式（設定權重或懲罰係數）。
+4. 更新 `summary` 文字，讓每輪 log 看得到新指標。
+
+## 如何修改指標
+
+1. 修改指標來源指令（例如把 `ruff` 換成 `eslint`）。
+2. 修改解析函式（例如錯誤行數的 regex 規則）。
+3. 修改 `score` 權重，調整優化方向。
+4. 若要改主分數欄位名稱，記得同步修改 `autodev.toml` 的 `[evaluator].score_key`。
+
 ## 安全機制
 
 - 只允許修改 `editable_paths` 內檔案。
