@@ -1,0 +1,36 @@
+[run]
+name = "my-autodev-run"
+max_iterations = 30
+score_epsilon = 0.000001
+keep_equal = false
+patience = 8
+# Optional: auto-create/switch to this branch before loop starts.
+branch = "autodev/demo"
+
+[agent]
+# Required placeholders you can use:
+# - {prompt_file}: generated prompt path for current iteration
+# - {iteration}: current iteration index
+# - {best_score}: current best score
+# - {workspace}: repo root
+# - {program_file}: program.md path
+#
+# Example (replace with your own coding agent command):
+# command = "codex exec --sandbox workspace-write --approval-mode never --prompt-file {prompt_file}"
+command = "echo 'replace me with your agent command that edits code in-place using {prompt_file}'"
+timeout_seconds = 600
+
+[evaluator]
+# Must print a JSON object to stdout. Example:
+# {"score": 83.2, "summary": "42 tests passed, 0 failed", "metrics": {...}}
+command = "python3 tools/evaluate_pytest.py"
+timeout_seconds = 300
+score_key = "score"
+higher_is_better = true
+
+[workspace]
+# Agent changes outside these paths are auto-reverted.
+editable_paths = ["src", "tests", "pyproject.toml", "README.md"]
+program_file = "program.md"
+artifacts_dir = ".autodev"
+results_tsv = "results.tsv"
